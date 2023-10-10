@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "dgSpecHash": "KkKm9gbbE9VJISpJcNhxuXp5WtJh6jNtoXnMrSavhgc6ulnpuTHjGhf/ibMdPlsn4bYkY5LjimAtGAthsN0haQ==",
+  "success": true,
+  "projectFilePath": "/home/fracata/dev/bildung/bildung.csproj",
+  "expectedPackageFiles": [
+    "/home/fracata/.nuget/packages/raylib-cs/4.5.0.4/raylib-cs.4.5.0.4.nupkg.sha512",
+    "/home/fracata/.nuget/packages/system.numerics.vectors/4.5.0/system.numerics.vectors.4.5.0.nupkg.sha512",
+    "/home/fracata/.nuget/packages/microsoft.netcore.app.runtime.linux-x64/7.0.9/microsoft.netcore.app.runtime.linux-x64.7.0.9.nupkg.sha512",
+    "/home/fracata/.nuget/packages/microsoft.aspnetcore.app.runtime.linux-x64/7.0.9/microsoft.aspnetcore.app.runtime.linux-x64.7.0.9.nupkg.sha512",
+    "/home/fracata/.nuget/packages/microsoft.netcore.app.host.linux-x64/7.0.9/microsoft.netcore.app.host.linux-x64.7.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}
