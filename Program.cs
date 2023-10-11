@@ -1,6 +1,4 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using System;
-using System.Data.SqlTypes;
 using System.Numerics;
 using Raylib_cs;
 
@@ -24,7 +22,6 @@ namespace Bildung
         public static int GameHeight = 750;
 
         static List<DraggableSquare> draggableSquares = new List<DraggableSquare>();
-        static DraggableSquare? selectedSquare = null;
 
         static void Main(string[] args)
         {
@@ -34,9 +31,11 @@ namespace Bildung
 
             Camera2D camera = new Camera2D();
             camera.zoom = 1.0f;
+            // Set the camera offset to the center of the screen without counting the top bar
+            camera.offset = new Vector2(GameWidth / 2, GameHeight / 2 + GameHeight / 5);
 
             // Red square position
-            Vector2 square_position = new Vector2(GameWidth / 2 - 25, GameHeight / 10 - 25);
+            Vector2 squarePosition = new Vector2(GameWidth / 2 - 25, GameHeight / 10 - 25);
 
             Raylib.SetTargetFPS(60);
 
@@ -44,43 +43,63 @@ namespace Bildung
         {
 
             // Update
-
+            
+            // Get the mouse position
+            Vector2 mousePosition = Raylib.GetMousePosition();
+            // Get the mouse delta
+            Vector2 delta = Raylib.GetMouseDelta();
+            // Get the world point that is under the mouse
+            Vector2 mouseWorldPos = Raylib.GetScreenToWorld2D(mousePosition, camera);
+                
             // Translate based on mouse right click
             if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_RIGHT_BUTTON))
             {
-                Vector2 delta = Raylib.GetMouseDelta();
+                // Convert the delta into world space
                 delta = Raymath.Vector2Scale(delta, -1.0f/camera.zoom);
-
                 camera.target = Raymath.Vector2Add(camera.target, delta);
             }
 
-            Vector2 mouse_position = Raylib.GetMousePosition();
-
-            if (Raylib.IsKeyPressed(KeyboardKey.KEY_SPACE))
+            // Zoom based on mouse wheel
+            float wheel = Raylib.GetMouseWheelMove();
+            if (wheel != 0)
             {
-                // Create a new draggable square at a specific position
-                Vector2 newSquarePosition = new Vector2((int)square_position.X, (int)square_position.Y);
-                DraggableSquare newSquare = new DraggableSquare(newSquarePosition, Color.BLUE);
-                draggableSquares.Add(newSquare);
+                // Set the offset to where the mouse is
+                camera.offset = mousePosition;
+
+                // Set the target to match, so that the camera maps the world space point 
+                // under the cursor to the screen space point under the cursor at any zoom
+                camera.target = mouseWorldPos;
+
+                // Zoom increment
+                const float zoomIncrement = 0.125f;
+
+                camera.zoom += wheel * zoomIncrement;
+                if (camera.zoom < zoomIncrement) camera.zoom = zoomIncrement;
             }
 
-            // Check for mouse interactions with draggable squares
+            if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
+            {
+                if (Raylib.CheckCollisionPointRec(mousePosition, new Rectangle(squarePosition.X, squarePosition.Y, 50, 50)))
+                {
+                    // Center of the screen
+                    Vector2 center = new Vector2(GameWidth / 2 - 25, GameHeight / 2 - 25);
+                    draggableSquares.Add(new DraggableSquare(Raylib.GetScreenToWorld2D(center, camera), Color.BLUE));
+                }
+            }
+
+            // Move the sqaures with drag and drop
             if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_LEFT_BUTTON))
             {
-                // Check interactions with the blue squares
                 foreach (DraggableSquare square in draggableSquares)
                 {
-                    if (Raylib.CheckCollisionPointRec(mouse_position, new Rectangle(square.Position.X, square.Position.Y, 50, 50)))
-                    {
-                        selectedSquare = square;
-                        break;
-                    }
-                }
 
-                if (selectedSquare != null)
-                {
-                    // Move the selected blue square with the mouse
-                    selectedSquare.Position = mouse_position;
+                    if (Raylib.CheckCollisionPointRec(mouseWorldPos, new Rectangle(square.Position.X, square.Position.Y, 50, 50)))
+                    {
+                        // Convert the delta into world space
+                        delta = Raymath.Vector2Scale(delta, -1.0f/camera.zoom);
+                        // Move the square by the delta
+                        square.Position = Raymath.Vector2Add(square.Position, -1*delta);
+                    }
                 }
             }
 
@@ -110,7 +129,8 @@ namespace Bildung
                 Raylib.DrawRectangle(0, 0, GameWidth, GameHeight / 5, Color.GRAY);
 
                 // Draw a square in the top bar
-                Raylib.DrawRectangle((int)square_position.X, (int)square_position.Y, 50, 50, Color.RED);
+                Raylib.DrawRectangle((int)squarePosition.X, (int)squarePosition.Y, 50, 50, Color.RED);
+
 
             Raylib.EndDrawing();
 
