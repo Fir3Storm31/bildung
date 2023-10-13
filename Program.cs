@@ -7,12 +7,12 @@ namespace Bildung
     public class DraggableSquare
     {
         public Vector2 Position { get; set; }
-        public Color Color { get; set; }
+        public Texture2D Texture { get; set; }
 
-        public DraggableSquare(Vector2 position, Color color)
+        public DraggableSquare(Vector2 position, Texture2D texture)
         {
             Position = position;
-            Color = color;
+            Texture = texture;
         }
     }
 
@@ -36,6 +36,13 @@ namespace Bildung
 
             // Red square position
             Vector2 squarePosition = new Vector2(GameWidth / 2 - 25, GameHeight / 10 - 25);
+
+            // Load the texture from assets
+            Image sumImage = Raylib.LoadImage("assets/sum.png");
+            // Scale the image to 50x50
+            Raylib.ImageResizeNN(ref sumImage, 50, 50);
+            Texture2D texture = Raylib.LoadTextureFromImage(sumImage);      // Image converted to texture, uploaded to GPU memory (VRAM)
+            Raylib.UnloadImage(sumImage); 
 
             Raylib.SetTargetFPS(60);
 
@@ -83,7 +90,9 @@ namespace Bildung
                 {
                     // Center of the screen
                     Vector2 center = new Vector2(GameWidth / 2 - 25, GameHeight / 2 - 25);
-                    draggableSquares.Add(new DraggableSquare(Raylib.GetScreenToWorld2D(center, camera), Color.BLUE));
+
+                    // Add the square to the list
+                    draggableSquares.Add(new DraggableSquare(Raylib.GetScreenToWorld2D(center, camera), texture));
                 }
             }
 
@@ -120,7 +129,8 @@ namespace Bildung
                 // Draw the draggable squares
                 foreach (DraggableSquare square in draggableSquares)
                 {
-                    Raylib.DrawRectangle((int)square.Position.X, (int)square.Position.Y, 50, 50, square.Color);
+                    //Raylib.DrawRectangle((int)square.Position.X, (int)square.Position.Y, 50, 50, square.Color);
+                    Raylib.DrawTexture(square.Texture, (int)square.Position.X, (int)square.Position.Y, Color.WHITE);
                 }
 
                 Raylib.EndMode2D();
@@ -130,6 +140,8 @@ namespace Bildung
 
                 // Draw a square in the top bar
                 Raylib.DrawRectangle((int)squarePosition.X, (int)squarePosition.Y, 50, 50, Color.RED);
+                // Draw the sum texture into the square
+                Raylib.DrawTexture(texture, (int)squarePosition.X, (int)squarePosition.Y, Color.WHITE);
 
 
             Raylib.EndDrawing();
