@@ -4,24 +4,12 @@ using Raylib_cs;
 
 namespace Bildung
 {
-    public class DraggableSquare
-    {
-        public Vector2 Position { get; set; }
-        public Texture2D Texture { get; set; }
-
-        public DraggableSquare(Vector2 position, Texture2D texture)
-        {
-            Position = position;
-            Texture = texture;
-        }
-    }
-
     class Program
     {
         public static int GameWidth = 1200;
         public static int GameHeight = 750;
-
-        static List<DraggableSquare> draggableSquares = new List<DraggableSquare>();
+        static List<Element> elements = new List<Element>();
+        public static int elementSize = 50;
 
         static void Main(string[] args)
         {
@@ -34,103 +22,101 @@ namespace Bildung
             // Set the camera offset to the center of the screen without counting the top bar
             camera.offset = new Vector2(GameWidth / 2, GameHeight / 2 + GameHeight / 5);
 
-            // Red square position
-            Vector2 squarePosition = new Vector2(GameWidth / 2 - 25, GameHeight / 10 - 25);
+            // Load the sumTexture from assets
+            Image sumImage = Raylib.LoadImage("assets/sum2.png");
+            Raylib.ImageResizeNN(ref sumImage, elementSize, elementSize);
+            Texture2D sumTexture = Raylib.LoadTextureFromImage(sumImage);      // Image converted to sumTexture, uploaded to GPU memory (VRAM)
+            Raylib.UnloadImage(sumImage);
 
-            // Load the texture from assets
-            Image sumImage = Raylib.LoadImage("assets/sum.png");
-            // Scale the image to 50x50
-            Raylib.ImageResizeNN(ref sumImage, 50, 50);
-            Texture2D texture = Raylib.LoadTextureFromImage(sumImage);      // Image converted to texture, uploaded to GPU memory (VRAM)
-            Raylib.UnloadImage(sumImage); 
+            // Set the sumTexture position
+            Vector2 sumPosition = new Vector2(GameWidth / 2 - elementSize / 2, GameHeight / 10 - elementSize / 2);
 
             Raylib.SetTargetFPS(60);
 
-        while (!Raylib.WindowShouldClose())
-        {
-
-            // Update
-            
-            // Get the mouse position
-            Vector2 mousePosition = Raylib.GetMousePosition();
-            // Get the mouse delta
-            Vector2 delta = Raylib.GetMouseDelta();
-            // Get the world point that is under the mouse
-            Vector2 mouseWorldPos = Raylib.GetScreenToWorld2D(mousePosition, camera);
-                
-            // Translate based on mouse right click
-            if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_RIGHT_BUTTON))
+            while (!Raylib.WindowShouldClose())
             {
-                // Convert the delta into world space
-                delta = Raymath.Vector2Scale(delta, -1.0f/camera.zoom);
-                camera.target = Raymath.Vector2Add(camera.target, delta);
-            }
 
-            // Zoom based on mouse wheel
-            float wheel = Raylib.GetMouseWheelMove();
-            if (wheel != 0)
-            {
-                // Set the offset to where the mouse is
-                camera.offset = mousePosition;
+                // Update
 
-                // Set the target to match, so that the camera maps the world space point 
-                // under the cursor to the screen space point under the cursor at any zoom
-                camera.target = mouseWorldPos;
+                // Get the mouse position
+                Vector2 mousePosition = Raylib.GetMousePosition();
+                // Get the mouse delta
+                Vector2 delta = Raylib.GetMouseDelta();
+                // Get the world point that is under the mouse
+                Vector2 mouseWorldPos = Raylib.GetScreenToWorld2D(mousePosition, camera);
 
-                // Zoom increment
-                const float zoomIncrement = 0.125f;
-
-                camera.zoom += wheel * zoomIncrement;
-                if (camera.zoom < zoomIncrement) camera.zoom = zoomIncrement;
-            }
-
-            if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
-            {
-                if (Raylib.CheckCollisionPointRec(mousePosition, new Rectangle(squarePosition.X, squarePosition.Y, 50, 50)))
+                // Translate based on mouse right click
+                if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_RIGHT_BUTTON))
                 {
-                    // Center of the screen
-                    Vector2 center = new Vector2(GameWidth / 2 - 25, GameHeight / 2 - 25);
-
-                    // Add the square to the list
-                    draggableSquares.Add(new DraggableSquare(Raylib.GetScreenToWorld2D(center, camera), texture));
+                    // Convert the delta into world space
+                    delta = Raymath.Vector2Scale(delta, -1.0f / camera.zoom);
+                    camera.target = Raymath.Vector2Add(camera.target, delta);
                 }
-            }
 
-            // Move the sqaures with drag and drop
-            if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_LEFT_BUTTON))
-            {
-                foreach (DraggableSquare square in draggableSquares)
+                // Zoom based on mouse wheel
+                float wheel = Raylib.GetMouseWheelMove();
+                if (wheel != 0)
                 {
+                    // Set the offset to where the mouse is
+                    camera.offset = mousePosition;
 
-                    if (Raylib.CheckCollisionPointRec(mouseWorldPos, new Rectangle(square.Position.X, square.Position.Y, 50, 50)))
+                    // Set the target to match, so that the camera maps the world space point 
+                    // under the cursor to the screen space point under the cursor at any zoom
+                    camera.target = mouseWorldPos;
+
+                    // Zoom increment
+                    const float zoomIncrement = 0.125f;
+
+                    camera.zoom += wheel * zoomIncrement;
+                    if (camera.zoom < zoomIncrement) camera.zoom = zoomIncrement;
+                }
+
+                if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
+                {
+                    if (Raylib.CheckCollisionPointRec(mousePosition, new Rectangle(sumPosition.X, sumPosition.Y, 50, 50)))
                     {
-                        // Convert the delta into world space
-                        delta = Raymath.Vector2Scale(delta, -1.0f/camera.zoom);
-                        // Move the square by the delta
-                        square.Position = Raymath.Vector2Add(square.Position, -1*delta);
+                        // Center of the screen
+                        Vector2 center = new Vector2(GameWidth / 2 - elementSize / 2, GameHeight / 2 - elementSize / 2);
+
+                        // Add the square to the list and pass empty lists for inputs and weights
+                        elements.Add(new Sum(Raylib.GetScreenToWorld2D(center, camera), sumTexture, new List<Element>()));
                     }
                 }
-            }
+
+                // Move the sqaures with drag and drop
+                if (Raylib.IsMouseButtonDown(MouseButton.MOUSE_LEFT_BUTTON))
+                {
+                    foreach (Element elmnt in elements)
+                    {
+
+                        if (Raylib.CheckCollisionPointRec(mouseWorldPos, new Rectangle(elmnt.Position.X, elmnt.Position.Y, 50, 50)))
+                        {
+                            // Convert the delta into world space
+                            delta = Raymath.Vector2Scale(delta, -1.0f / camera.zoom);
+                            // Move the square by the delta
+                            elmnt.Position = Raymath.Vector2Add(elmnt.Position, -1 * delta);
+                        }
+                    }
+                }
 
 
-            // Draw
-            Raylib.BeginDrawing();
+                // Draw
+                Raylib.BeginDrawing();
                 Raylib.ClearBackground(Color.RAYWHITE);
 
                 Raylib.BeginMode2D(camera);
 
                 // Draw the grid
                 Rlgl.rlPushMatrix();
-                    Rlgl.rlTranslatef(0, 25*50, 0);
-                    Rlgl.rlRotatef(90, 1, 0, 0);
-                    Raylib.DrawGrid(100, 40);
+                Rlgl.rlTranslatef(0, 25 * 50, 0);
+                Rlgl.rlRotatef(90, 1, 0, 0);
+                Raylib.DrawGrid(1000, elementSize / 2);
                 Rlgl.rlPopMatrix();
 
-                // Draw the draggable squares
-                foreach (DraggableSquare square in draggableSquares)
+                // Draw the elements
+                foreach (Element elmnt in elements)
                 {
-                    //Raylib.DrawRectangle((int)square.Position.X, (int)square.Position.Y, 50, 50, square.Color);
-                    Raylib.DrawTexture(square.Texture, (int)square.Position.X, (int)square.Position.Y, Color.WHITE);
+                    Raylib.DrawTexture(elmnt.Texture, (int)elmnt.Position.X, (int)elmnt.Position.Y, Color.WHITE);
                 }
 
                 Raylib.EndMode2D();
@@ -138,19 +124,17 @@ namespace Bildung
                 // Draw the top bar
                 Raylib.DrawRectangle(0, 0, GameWidth, GameHeight / 5, Color.GRAY);
 
-                // Draw a square in the top bar
-                Raylib.DrawRectangle((int)squarePosition.X, (int)squarePosition.Y, 50, 50, Color.RED);
-                // Draw the sum texture into the square
-                Raylib.DrawTexture(texture, (int)squarePosition.X, (int)squarePosition.Y, Color.WHITE);
+                // Draw the sumTexture
+                Raylib.DrawTexture(sumTexture, (int)sumPosition.X, (int)sumPosition.Y, Color.WHITE);
 
 
-            Raylib.EndDrawing();
+                Raylib.EndDrawing();
 
-        }
+            }
 
-        Raylib.CloseWindow();
+            Raylib.CloseWindow();
 
-        return;
+            return;
 
         }
     }
