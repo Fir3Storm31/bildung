@@ -28,8 +28,22 @@ namespace Bildung
             Texture2D sumTexture = Raylib.LoadTextureFromImage(sumImage);      // Image converted to sumTexture, uploaded to GPU memory (VRAM)
             Raylib.UnloadImage(sumImage);
 
-            // Set the sumTexture position
-            Vector2 sumPosition = new Vector2(GameWidth / 2 - elementSize / 2, GameHeight / 10 - elementSize / 2);
+            // Load the reluTexture from assets
+            Image reluImage = Raylib.LoadImage("assets/relu.png");
+            Raylib.ImageResizeNN(ref reluImage, elementSize, elementSize);
+            Texture2D reluTexture = Raylib.LoadTextureFromImage(reluImage);      // Image converted to sumTexture, uploaded to GPU memory (VRAM)
+            Raylib.UnloadImage(reluImage);
+
+            // Load the tanhTexture from assets
+            Image tanhImage = Raylib.LoadImage("assets/tanh.png");
+            Raylib.ImageResizeNN(ref tanhImage, elementSize, elementSize);
+            Texture2D tanhTexture = Raylib.LoadTextureFromImage(tanhImage);      // Image converted to sumTexture, uploaded to GPU memory (VRAM)
+            Raylib.UnloadImage(tanhImage);
+
+            // Set the top bar's elements position
+            Vector2 sumPosition = new Vector2(elementSize / 2 + 100, GameHeight / 10 - elementSize / 2);
+            Vector2 reluPosition = new Vector2(elementSize / 2 + 100 + 75, GameHeight / 10 - elementSize / 2);
+            Vector2 tanhPosition = new Vector2(elementSize / 2 + 100 + 2*75, GameHeight / 10 - elementSize / 2);
 
             Raylib.SetTargetFPS(60);
 
@@ -73,13 +87,20 @@ namespace Bildung
 
                 if (Raylib.IsMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON))
                 {
-                    if (Raylib.CheckCollisionPointRec(mousePosition, new Rectangle(sumPosition.X, sumPosition.Y, 50, 50)))
+                    if (Raylib.CheckCollisionPointRec(mousePosition, new Rectangle(sumPosition.X, sumPosition.Y, elementSize, elementSize)))
                     {
-                        // Center of the screen
                         Vector2 center = new Vector2(GameWidth / 2 - elementSize / 2, GameHeight / 2 - elementSize / 2);
-
-                        // Add the square to the list and pass empty lists for inputs and weights
                         elements.Add(new Sum(Raylib.GetScreenToWorld2D(center, camera), sumTexture, new List<Element>()));
+                    }
+                    else if (Raylib.CheckCollisionPointRec(mousePosition, new Rectangle(tanhPosition.X, tanhPosition.Y, elementSize, elementSize)))
+                    {
+                        Vector2 center = new Vector2(GameWidth / 2 - elementSize / 2, GameHeight / 2 - elementSize / 2);
+                        elements.Add(new Element(Raylib.GetScreenToWorld2D(center, camera), tanhTexture, new List<Element>()));
+                    }
+                    else if (Raylib.CheckCollisionPointRec(mousePosition, new Rectangle(reluPosition.X, reluPosition.Y, elementSize, elementSize)))
+                    {
+                        Vector2 center = new Vector2(GameWidth / 2 - elementSize / 2, GameHeight / 2 - elementSize / 2);
+                        elements.Add(new Element(Raylib.GetScreenToWorld2D(center, camera), reluTexture, new List<Element>()));
                     }
                 }
 
@@ -126,6 +147,8 @@ namespace Bildung
 
                 // Draw the sumTexture
                 Raylib.DrawTexture(sumTexture, (int)sumPosition.X, (int)sumPosition.Y, Color.WHITE);
+                Raylib.DrawTexture(reluTexture, (int)reluPosition.X, (int)reluPosition.Y, Color.WHITE);
+                Raylib.DrawTexture(tanhTexture, (int)tanhPosition.X, (int)tanhPosition.Y, Color.WHITE);
 
 
                 Raylib.EndDrawing();
